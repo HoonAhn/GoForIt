@@ -2,16 +2,19 @@ package main
 
 import (
 	"fmt"
+	"main/accounts"
 )
 
-type person struct {
-	name    string
-	age     int
-	favFood []string
-}
-
 func main() {
-	fav := []string{"kimchi", "real ramen"}
-	hoon := person{name: "bacon", favFood: fav, age: 20}
-	fmt.Println(hoon)
+	account := accounts.NewAccount("Bacon")
+	fmt.Println(account)
+	if account.Deposit(1000) {
+		fmt.Println("Deposit succeeded!")
+	}
+	err := account.Withdraw(500)
+	if err != nil {
+		fmt.Println(err)
+	}
+	account.ChangeOwner("Hoon")
+	fmt.Println(account.String())
 }
