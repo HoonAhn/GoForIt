@@ -1,23 +1,44 @@
 package main
 
 import (
+	"errors"
 	"fmt"
-	"main/myDict"
+	"net/http"
 )
 
+var errRequestFailed = errors.New("Request Failed!")
+
 func main() {
-	dictionary := myDict.Dictionary{}
-	newword := "hello"
-	newdef := "World"
-	err := dictionary.Add(newword, newdef)
-	if err != nil {
-		fmt.Println(err)
+	results := map[string]string{}
+	urls := []string{
+		"https://www.google.com/",
+		"https://www.amazon.com/",
+		"https://www.airbnb.com/",
+		"https://www.facebook.com/",
+		"https://www.reddit.com/",
+		"https://www.instagram.com/",
+		"https://soundcloud.com/",
 	}
-	err2 := dictionary.Update(newword, "hoon")
-	if err2 != nil {
-		fmt.Println(err2)
+	for _, url := range urls {
+		resultStatus := "OK"
+		err := hitURL(url)
+		if err != nil {
+			resultStatus = "FAILED"
+		}
+		results[url] = resultStatus
 	}
-	dictionary.Delete("yo")
-	definition2, _ := dictionary.Search(newword)
-	fmt.Println(definition2)
+	for url, result := range results {
+		fmt.Println(url, result)
+	}
+}
+
+func hitURL(url string) error {
+	fmt.Println("Checking: ", url)
+	resp, err := http.Get(url)
+	if err != nil || resp.StatusCode >= 400 {
+		fmt.Println(err, resp.StatusCode)
+		return errRequestFailed
+	}
+	fmt.Println(err)
+	return nil
 }
