@@ -24,9 +24,13 @@ var baseURL string = "https://kr.indeed.com/jobs?q=python&limit=50"
 
 func main() {
 	var jobs []extractedJob
+	mainCh := make(chan []extractedJob)
 	pages := getPages()
 	for i := 0; i < pages; i++ {
-		extractedJobs := getPage(i)
+		go getPage(i, mainCh)
+	}
+	for i := 0; i < pages; i++ {
+		extractedJobs := <-mainCh
 		jobs = append(jobs, extractedJobs...)
 	}
 	writeJobs(jobs)
@@ -52,7 +56,7 @@ func writeJobs(jobs []extractedJob) {
 	}
 }
 
-func getPage(page int) []extractedJob {
+func getPage(page int, mainCh chan<- []extractedJob) {
 	ch := make(chan extractedJob)
 	var jobs []extractedJob
 	pageURL := baseURL + "&start=" + strconv.Itoa(page*50)
@@ -72,7 +76,7 @@ func getPage(page int) []extractedJob {
 		job := <-ch
 		jobs = append(jobs, job)
 	}
-	return jobs
+	mainCh <- jobs
 }
 
 func extractJob(card *goquery.Selection, ch chan<- extractedJob) {
