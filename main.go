@@ -38,6 +38,7 @@ func main() {
 }
 
 func writeJobs(jobs []extractedJob) {
+	// jCh := make(chan error)
 	file, err := os.Create("jobs.csv")
 	checkErr(err)
 
@@ -51,10 +52,20 @@ func writeJobs(jobs []extractedJob) {
 
 	for _, job := range jobs {
 		jobSlice := []string{"https://kr.indeed.com/viewjob?jk=" + job.id, job.title, job.location, job.salary, job.summary}
-		jwErr := w.Write(jobSlice)
-		checkErr(jwErr)
+		err := w.Write(jobSlice)
+		checkErr(err)
+		// go writeJob(*w, jobSlice, jCh)
 	}
+	// for i := 0; i < len(jobs); i++ {
+	// 	err := <-jCh
+	// 	checkErr(err)
+	// }
 }
+
+// func writeJob(w csv.Writer, job []string, ch chan<- error) {
+// 	err := w.Write(job)
+// 	ch <- err
+// }
 
 func getPage(page int, mainCh chan<- []extractedJob) {
 	ch := make(chan extractedJob)
