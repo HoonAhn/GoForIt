@@ -25,9 +25,9 @@ func Scrape(term string) {
 	var jobs []extractedJob
 	var baseURL string = "https://kr.indeed.com/jobs?q=" + term + "&limit=50"
 	mainCh := make(chan []extractedJob)
-	pages := getPages()
+	pages := getPages(baseURL)
 	for i := 0; i < pages; i++ {
-		go getPage(i, mainCh)
+		go getPage(i, baseURL, mainCh)
 	}
 	for i := 0; i < pages; i++ {
 		extractedJobs := <-mainCh
@@ -67,7 +67,7 @@ func writeJobs(jobs []extractedJob) {
 // 	ch <- err
 // }
 
-func getPage(page int, mainCh chan<- []extractedJob) {
+func getPage(page int, baseURL string, mainCh chan<- []extractedJob) {
 	ch := make(chan extractedJob)
 	var jobs []extractedJob
 	pageURL := baseURL + "&start=" + strconv.Itoa(page*50)
@@ -92,10 +92,10 @@ func getPage(page int, mainCh chan<- []extractedJob) {
 
 func extractJob(card *goquery.Selection, ch chan<- extractedJob) {
 	id, _ := card.Attr("data-jk")
-	title := cleanText(card.Find(".title>a").Text())
-	location := cleanText(card.Find(".sjcl").Text())
-	salary := cleanText(card.Find(".salaryText").Text())
-	summary := cleanText(card.Find(".summary").Text())
+	title := CleanText(card.Find(".title>a").Text())
+	location := CleanText(card.Find(".sjcl").Text())
+	salary := CleanText(card.Find(".salaryText").Text())
+	summary := CleanText(card.Find(".summary").Text())
 	ch <- extractedJob{
 		id:       id,
 		title:    title,
@@ -105,7 +105,7 @@ func extractJob(card *goquery.Selection, ch chan<- extractedJob) {
 	}
 }
 
-func getPages() int {
+func getPages(baseURL string) int {
 	res, err := http.Get(baseURL)
 	pages := 0
 	checkErr(err)
@@ -134,6 +134,7 @@ func checkStatusCode(res *http.Response) {
 	}
 }
 
-func cleanText(str string) string {
+// CleanText cleans text
+func CleanText(str string) string {
 	return strings.Join(strings.Fields(strings.TrimSpace(str)), " ")
 }
